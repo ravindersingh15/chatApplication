@@ -1,0 +1,71 @@
+services:
+  # 1. Your Dropwizard Backend Service
+  backend-app:
+    build: .
+    container_name: backend_app
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    # The volumes mount for config.yml is gone.
+    # Instead, we provide environment variables which are used by your
+    # application to populate the template config.yml inside the image.
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      # For local testing, we connect to the broker on the host machine
+      - MQTT_BROKER_HOST=host.docker.internal
+      - MQTT_BROKER_PORT=1883
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # 2. MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      # These variables are read from the .env file to set up the database
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h localhost -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      # These variables are read from the .env file to set up RabbitMQ
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+# Defines the named volume to persist database data
+volumes:
+  db-data:

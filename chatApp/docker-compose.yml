@@ -1,0 +1,17 @@
+
+services:
+  # This file now ONLY defines your client application service.
+  app:
+    # Tells Docker Compose to build the image from the Dockerfile in the current directory.
+    build: .
+    container_name: dropwizard_app
+    # Mounts your local config.yml file (which has the AWS URLs) into the container.
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+    # Keeps the container's input stream open so you can type into it.
+    stdin_open: true
+    # Allocates a pseudo-terminal, making it an interactive session.
+    tty: true
+
+
+

@@ -1,0 +1,60 @@
+# =========================================
+# Java / Maven
+# =========================================
+# Compiled class files and all build output
+**/target/
+**/*.class/
+# Log files
+*.log
+*.log.*
+
+# Maven release files
+release.properties
+pom.xml.releaseBackup
+
+# Maven wrapper folder
+.mvn/
+
+# =========================================
+# IDE Files & Directories
+# =========================================
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+.nb-gradle/
+
+# =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=
+# Secrets & Environment Variables
+# =_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=_=
+# Environment variables file - contains secrets and should NEVER be committed
+.env
+
+# =========================================
+# Operating System Files
+# =========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
