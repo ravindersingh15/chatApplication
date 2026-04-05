@@ -1,0 +1,5 @@
+Below Upgrades are needed to be done in the code:
+
+1. Status of users should not get changed in chat - if any other instance of same user is active from other device.
+2. Check authentication in MQTT messages.
+3. In group - Number of users online status - should be shown to user

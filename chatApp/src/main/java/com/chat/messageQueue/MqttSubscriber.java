@@ -16,4 +16,12 @@ public class MqttSubscriber {
             e.printStackTrace();
         }
     }
+
+    public void unsubscribe(String topic) {
+        try {
+            client.unsubscribe(topic);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
 }

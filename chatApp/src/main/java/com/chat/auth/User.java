@@ -3,14 +3,22 @@ package com.chat.auth;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "emailId")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
     private String userId;
+    
+    @JsonProperty("name")
+    @JsonAlias("userName")
     private String userName;
+    
     private String emailId;
     private boolean verified = false;
+    
+    private String token;
 
     public User(String userName, String emailId, String userId) {
         this.userName = userName;
@@ -39,8 +47,19 @@ public class User {
         this.userName = userName;
     }
 
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public boolean isVerified () {
         return this.verified;
     }
-
-}   
+}

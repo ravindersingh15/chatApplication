@@ -3,20 +3,25 @@ package com.chat.auth;
 import java.util.Scanner;
 
 import com.chat.api.Authentication;
+import com.chat.utils.HashUtil;
+import com.chat.utils.InputUtil;
 
 public class Register {
-    public User addUser() {
+    public User addUser(String hashSalt) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter EmailId: ");
+        System.out.print("Enter EmailId: ");
         String EmailId = scanner.nextLine();
-        System.out.println("Enter UserName: ");
+        System.out.print("Enter UserName: ");
         String UserName = scanner.nextLine();
-        System.out.println("Enter Password(min 4 letters): ");
-        String Password = scanner.nextLine();
-        System.out.println("Confirm your Password: ");
-        String rePassword = scanner.nextLine();
+        
+        String Password = InputUtil.readPassword("Enter Password(min 4 letters): ");
+        String rePassword = InputUtil.readPassword("Confirm your Password: ");
+        
         if(rePassword.equals(Password)){
-            User user  = this.register(EmailId, UserName, Password);
+            // Hash the password with the salt
+            String hashedPassword = HashUtil.hashPassword(Password, hashSalt);
+            
+            User user  = this.register(EmailId, UserName, hashedPassword);
             if(user != null) {
                 System.out.println("Registration Successful");
                 return user;

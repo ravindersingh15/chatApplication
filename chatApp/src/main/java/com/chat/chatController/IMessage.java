@@ -6,6 +6,6 @@ public interface IMessage {
     public String getSerializedContent();
     public String getMessage();
     static public IMessage deserializeMessage(String mqttMessage) {
-        return TextMessage.deserializeMessage(mqttMessage);
+        return null;
     }
 }

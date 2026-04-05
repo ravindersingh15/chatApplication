@@ -1,5 +1,7 @@
 package com.chat.utils;
 
+import org.apache.juli.logging.Log;
+
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
 import java.io.IOException;
@@ -8,8 +10,9 @@ import java.util.*;
 
 public class ApiCaller {
     private static Client client;
-    private static String baseUrl;
+    private static String baseUrl = "http://localhost:8080/api";
     private static final String TOKEN_FILE = "token"; // In same dir as config
+    private static String memoryToken = null;
 
     public static void init(Client httpClient, String baseApiUrl) {
         System.out.println("Initializing API Caller with base URL: " + baseApiUrl);
@@ -18,6 +21,9 @@ public class ApiCaller {
     }
 
     public static String callApi(String path, String method, Map<String, String> headers, String payload) {
+        if (client == null) {
+            client = ClientBuilder.newClient();
+        }
         WebTarget target = client.target(baseUrl).path(path);
         Invocation.Builder requestBuilder = target.request();
 
@@ -25,10 +31,9 @@ public class ApiCaller {
         if (headers == null) headers = new HashMap<>();
         headers.putIfAbsent(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
 
-        // Auto Authorization (unless login or register)
-        if (!path.equals("/auth/login") && !path.equals("/auth/register")) {
+        if (!path.startsWith("/auth/login") && !path.startsWith("/auth/register")) {
             String token = readToken();
-            if (token != null) {
+            if (token != null && !token.isEmpty()) {
                 headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + token);
             }
         }
@@ -37,65 +42,78 @@ public class ApiCaller {
         headers.forEach(requestBuilder::header);
 
         // Call API
-        Response response;
-        switch (method.toUpperCase()) {
-            case "POST":   response = requestBuilder.post(Entity.json(payload)); break;
-            case "PUT":    response = requestBuilder.put(Entity.json(payload)); break;
-            case "DELETE": response = requestBuilder.method("DELETE", Entity.json(payload)); break;
-            case "GET":    response = requestBuilder.get(); break;
-            default:       throw new IllegalArgumentException("Unsupported method: " + method);
+        Response response = null;
+        try {
+            switch (method.toUpperCase()) {
+                case "POST":   response = requestBuilder.post(payload != null ? Entity.json(payload) : null); break;
+                case "PUT":    response = requestBuilder.put(payload != null ? Entity.json(payload) : null); break;
+                case "DELETE": response = requestBuilder.method("DELETE", payload != null ? Entity.json(payload) : null); break;
+                case "GET":    response = requestBuilder.get(); break;
+                default:       throw new IllegalArgumentException("Unsupported method: " + method);
+            }
+        } catch (Exception e) {
+            System.err.println("API Call failed: " + e.getMessage());
+            return null;
         }
 
-        String responseBody = response.readEntity(String.class);
-
-        // Save token if needed
-        if ((path.equals("/auth/login") || path.equals("/auth/register")) && response.getStatus() == 200) {
-            String token = extractTokenFromJson(responseBody);
-            if (token != null) saveToken(token);
+        int status = response.getStatus();
+        String responseBody = "";
+        if (response.hasEntity()) {
+            responseBody = response.readEntity(String.class);
         }
 
-        if (response.getStatus() >= 200 && response.getStatus() < 300) {
+        if (status >= 200 && status < 300) {
             return responseBody;
-        } else if (response.getStatus() == 401) {
-            System.err.println("Unauthorized access");
+        } else if (status == 401) {
+            System.err.println("Unauthorized access - logging out");
+            clearToken();
+            return null;
+        } else if (status == 403) {
+            System.err.println("Access denied");
+            return null;
+        } else if (status >= 500) {
+            System.err.println("Server error occurred");
+            return null;
+        } else if (status == 404) {
+            // Ignore printing 404 errors as they are expected for empty lists/resources
             return null;
         } else {
+            System.err.println("API Error " + status + ": " + responseBody);
             return null;
         }
     }
 
-    private static String extractTokenFromJson(String json) {
-        try {
-            int start = json.indexOf("\"token\":\"") + 9;
-            int end = json.indexOf("\"", start);
-            return (start >= 9 && end > start) ? json.substring(start, end) : null;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static void saveToken(String token) {
+    public static void saveToken(String token) {
+        memoryToken = token;
         try {
             Path path = Paths.get(TOKEN_FILE);
-
-            // Only create file during save
             if (!Files.exists(path)) {
                 Files.createFile(path);
             }
             Files.writeString(path, token, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
-            System.err.println("something went wrong!!");
+            System.err.println("Failed to save token to file");
         }
     }
 
     private static String readToken() {
+        if (memoryToken != null) return memoryToken;
         try {
             Path path = Paths.get(TOKEN_FILE);
             if (!Files.exists(path)) return null;
-            return Files.readString(path).trim();
+            memoryToken = Files.readString(path).trim();
+            return memoryToken;
         } catch (IOException e) {
-            System.err.println("something went wrong!!");
             return null;
+        }
+    }
+    
+    public static void clearToken() {
+        memoryToken = null;
+        try {
+            Files.deleteIfExists(Paths.get(TOKEN_FILE));
+        } catch (IOException e) {
+            // Ignore if file doesn't exist
         }
     }
 }

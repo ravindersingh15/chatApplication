@@ -1,0 +1,7 @@
+# Application Configuration
+baseUrl: "http://localhost:8080"
+hashSalt: "my_random_good_hash_salt_12345!@#$"
+
+# MQTT Configuration
+mqtt:
+  brokerUrl: "tcp://localhost:1883"

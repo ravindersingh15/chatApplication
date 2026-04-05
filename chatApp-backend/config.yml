@@ -1,0 +1,31 @@
+logging:
+  level: INFO
+  loggers:
+    com.chatBackend: DEBUG
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+      bindHost: 0.0.0.0
+  adminConnectors:
+    - type: http
+      port: 8081
+      bindHost: 0.0.0.0
+
+database:
+  driverClass: com.mysql.cj.jdbc.Driver
+  user: ${DB_USER:-root}
+  password: ${DB_PASSWORD:-Ravi@150500}
+  url: jdbc:mysql://${DB_HOST:-127.0.0.1}:${DB_PORT:-3306}/${DB_NAME:-sherlock_chat}?sslMode=REQUIRED
+  validationQuery: "SELECT 1"
+
+mqtt:
+  brokerUrl: "tcp://${MQTT_BROKER_HOST:-localhost}:${MQTT_BROKER_PORT:-1883}"
+  clientId: "sherlock-backend-subscriber"
+
+rabbitmq:
+  host: ${RABBITMQ_HOST:-localhost}
+  port: ${RABBITMQ_PORT:-5672}
+  username: ${RABBITMQ_USER:-guest}
+  password: ${RABBITMQ_PASS:-guest}

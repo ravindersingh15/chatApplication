@@ -17,8 +17,8 @@ public class MqttMessageHandler implements MqttCallback {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        // Notify ChatSession through the listener
-        listener.onMessageReceived(topic, message.toString());
+        // Notify ChatSession through the listener, passing along the retained flag
+        listener.onMessageReceived(topic, message.toString(), message.isRetained());
     }
 
     @Override
